@@ -1,7 +1,7 @@
 # automated-job-outreach-ai
 AI-powered job search automation: scraping, scoring, lead discovery &amp; cold outreach using n8n + LLM
 
-# 🚀 AI Job Search Automation (n8n)
+#  AI Job Search Automation (n8n)
 
 An end-to-end job search automation workflow built using n8n that:
 
