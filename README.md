@@ -1,6 +1,12 @@
 # automated-job-outreach-ai
 AI-powered job search automation: scraping, scoring, lead discovery &amp; cold outreach using n8n + LLM
 
+---
+## 📸 Screenshots
+<img width="1710" height="447" alt="image" src="https://github.com/user-attachments/assets/bb787b26-4772-4340-a8c4-d2224bf76e89" />
+---
+
+
 #  AI Job Search Automation (n8n)
 
 An end-to-end job search automation workflow built using n8n that:
@@ -94,11 +100,7 @@ Search:
 
 ---
 
-## 📸 Screenshots
 
-(Add your workflow screenshot here)
-
----
 
 ## 🚧 Future Improvements
 
