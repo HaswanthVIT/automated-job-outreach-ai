@@ -1,0 +1,1238 @@
+{
+  "name": "Linkedin mass scraper JobSearch",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        -16
+      ],
+      "id": "67a49e32-7d59-4bc4-a03a-b8d8196ad70c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}",
+        "offset": {},
+        "limit": {}
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -16
+      ],
+      "id": "d12a7c3b-0f92-4dfe-b540-3dadda78e558",
+      "name": "Get dataset items",
+      "credentials": {
+        "apifyApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "value": "hKByXkMQaC5Qt9UMN",
+          "mode": "list",
+          "cachedResultName": "Linkedin Jobs Scraper (curious_coder/linkedin-jobs-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/hKByXkMQaC5Qt9UMN/input"
+        },
+        "customBody": "{\n    \"count\": 100,\n    \"scrapeCompany\": true,\n    \"splitByLocation\": false,\n    \"splitCountry\": \"IN\",\n    \"urls\": [\n        \"https://www.linkedin.com/jobs/search?keywords=Software%20Engineer&location=India&geoId=102713980&f_JT=F&f_E=1%2C2&f_PP=105214831%2C105556991%2C103671728%2C106888327%2C104869687%2C106442238%2C103976542&f_TPR=r86400&position=1&pageNum=0\",\n        \"https://www.linkedin.com/jobs/search?keywords=AI%20Engineer&location=India&geoId=102713980&f_E=1%2C2&f_PP=106442238%2C105556991%2C105214831%2C104793846%2C104869687%2C106888327%2C103671728&f_TPR=r86400&f_WT=1%2C3&position=1&pageNum=0\",\n        \"https://www.linkedin.com/jobs/search?keywords=Cloud%20Engineer&location=India&geoId=102713980&f_JT=F&f_E=1%2C2&f_PP=105214831%2C103671728%2C105556991%2C106888327%2C104869687%2C106442238&f_TPR=&f_WT=1%2C3%2C2&position=1&pageNum=0\"\n    ]\n}",
+        "timeout": {}
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "c93bba1a-aac6-4976-ad86-50814c307d22",
+      "name": "Run an Actor1",
+      "credentials": {
+        "apifyApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "phi3:latest",
+          "mode": "list",
+          "cachedResultName": "phi3:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an expert AI Job Matcher. Evaluate the job listing below against the candidate's profile. \nDo NOT assume any missing information. Your goal is to score the job out of a maximum of 5 points.\n\n### SCORING RULES (Maximum 5 Points)\n\n1. \"resume_match_score\" (0 to 3 points): \n   - 3: Perfect match. Strongly aligns with Backend, Cloud, or Distributed Systems. Uses Java, Python, AWS, or Docker.\n   - 2: Good match. Uses some of the tech stack but might be slightly broader (e.g., Full-stack with React/Spring Boot).\n   - 1: Partial match. Junior role but missing core cloud/backend focus.\n   - 0: Weak match. Completely different role (e.g., Data Science, purely frontend, HR).\n\n2. \"company_type_score\" (0 or 1 point): \n   - 1: Top Product Company, Tech Startup, or In-house Engineering team (e.g., Amazon, Swiggy, Emerson, Fintechs, SaaS).\n   - 0: Service-based company, IT Consulting, or Staffing Agency (e.g., Wipro, TCS, Infosys, Cognizant, Accenture, Tech Mahindra, staffing firms). If the description mentions \"working for our client\", score 0.\n\n3. \"employment_type_score\" (0 or 1 point): \n   - 1: Full-time role (If the employment type is not explicitly mentioned, assume 1).\n   - 0: Explicitly states \"Contract\", \"Internship\", \"Part-time\", or \"Freelance\".\n\n### CANDIDATE PROFILE (S Haswanth)\n- Target: Backend / Cloud / Distributed Systems Engineer.\n- Education: B.Tech CSE (2026), VIT Vellore.\n- Skills: Java, Python, C++, Spring Boot, React.js, AWS, Docker, Kubernetes, Terraform, SQL.\n- Experience/Projects: Distributed MLOps Framework, Property Insights Platform, System Design.\n\n### JOB LISTING TO EVALUATE\nTitle: {{ $json.title }}\nCompany: {{ $json.companyName }}\nLocation: {{ $json.location }}\nJob Description: {{ $json.descriptionText }}\n\n### OUTPUT INSTRUCTIONS\nYou must output ONLY a valid JSON object. Do NOT wrap the JSON in markdown formatting like ```json. Do NOT include any explanations, pleasantries, or extra text. Start your response immediately with the { character.\n\n{\n  \"resume_match_score\": 0,\n  \"company_type_score\": 0,\n  \"employment_type_score\": 0,\n  \"reasoning\": \"One short sentence explaining the score, specifically mentioning if it is a product vs service company and how the skills align.\"\n}"
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -16
+      ],
+      "id": "e079f766-9d90-4706-8df0-347a4dd27bd0",
+      "name": "Message a model3",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all items\nfor (const item of $input.all()) {\n  try {\n    // 1. Get content (Handle different key names)\n    let content = item.json.message ? item.json.message.content : item.json.content;\n\n    if (content) {\n      // 2. Remove Markdown & Comments\n      content = content.replace(/```json/g, \"\").replace(/```/g, \"\");\n      content = content.replace(/\\/\\/.*$/gm, \"\"); // Remove comments\n\n      // 3. Extract JSON\n      const firstBrace = content.indexOf('{');\n      const lastBrace = content.lastIndexOf('}');\n\n      if (firstBrace !== -1 && lastBrace !== -1) {\n        content = content.substring(firstBrace, lastBrace + 1);\n        const parsed = JSON.parse(content);\n\n        // 4. Assign Parsed Fields to the Item (Updated for 5-point system)\n        item.json.resume_score = parsed.resume_match_score || 0;\n        item.json.company_score = parsed.company_type_score || 0;\n        item.json.type_score = parsed.employment_type_score || 0;\n        \n        // Calculate Total Score (Out of 5)\n        item.json.final_score = (item.json.resume_score + \n                                 item.json.company_score + \n                                 item.json.type_score);\n                                 \n        item.json.reasoning = parsed.reasoning || \"No reasoning provided\";\n        \n        // Cleanup the raw AI text from the final output to keep it neat\n        delete item.json.message;\n        delete item.json.content;\n      }\n    }\n  } catch (error) {\n    // If the AI fails to generate proper JSON, assign a 0 so the workflow doesn't crash\n    item.json.final_score = 0;\n    item.json.reasoning = \"Error parsing AI JSON: \" + error.message;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -16
+      ],
+      "id": "15b706d6-485d-400b-9cb1-d0d3f9874fc8",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "Google Sheets IDs",
+          "mode": "list",
+          "cachedResultName": "n8n-v2-jobSearch",
+          "cachedResultUrl": "<Link>"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $('Get dataset items').item.json.postedAt }}",
+            "Tracking ID": "={{ $('Get dataset items').item.json.trackingId }}",
+            "Job Title": "={{ $('Get dataset items').item.json.title }}",
+            "Company": "={{ $('Get dataset items').item.json.companyName }}",
+            "Location": "={{ $('Get dataset items').item.json.location }}",
+            "Salary Range": "={{ $('Get dataset items').item.json.salaryInfo }}\n{{ $('Get dataset items').item.json.salary }}\n{{ $('Get dataset items').item.json.salaryInfo[1] }}",
+            "Job Description": "={{ $('Get dataset items').item.json.descriptionText }}",
+            "Total Score": "={{ $('Code in JavaScript1').item.json.final_score }}",
+            "Type (0-1)": "={{ $('Code in JavaScript1').item.json.type_score }}",
+            "Resume (0-4)": "={{ $('Code in JavaScript1').item.json.resume_score }}",
+            "Salary (0-3)": "={{ $('Code in JavaScript1').item.json.salary_score }}",
+            "Remote (0-1)": "={{ $('Code in JavaScript1').item.json.remote_score }}",
+            "Benefits (0-1)": "={{ $('Code in JavaScript1').item.json.benefits_score }}",
+            "Reasoning": "={{ $('Code in JavaScript1').item.json.reasoning }}",
+            "Cover letter": "={{ $json.content }}",
+            "Job Link": "={{ $('Get dataset items').item.json.link }}",
+            "Emp Name": "={{ $json.all_names }}",
+            "Linkedin Profile Link": "={{ $json.all_urls }}"
+          },
+          "matchingColumns": [
+            "Tracking ID"
+          ],
+          "schema": [
+            {
+              "id": "Tracking ID",
+              "displayName": "Tracking ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Score",
+              "displayName": "Total Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Resume (0-4)",
+              "displayName": "Resume (0-4)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salary (0-3)",
+              "displayName": "Salary (0-3)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salary Range",
+              "displayName": "Salary Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Remote (0-1)",
+              "displayName": "Remote (0-1)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Benefits (0-1)",
+              "displayName": "Benefits (0-1)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type (0-1)",
+              "displayName": "Type (0-1)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cover letter",
+              "displayName": "Cover letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Emp Name",
+              "displayName": "Emp Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Linkedin Profile Link",
+              "displayName": "Linkedin Profile Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2704,
+        -96
+      ],
+      "id": "a2e666c6-1805-4932-b10f-63f37996f7cc",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "49922a11-7af0-444e-ae54-df45ac6993d4",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Senior",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "5a787b11-b15f-4187-af4d-c24f3b76adb7",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Sr ",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "c64596da-288d-4680-9fec-480194bbf0a4",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "L3",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "d82264ae-1ffa-428c-aa06-502d40cf0f02",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "L4",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "cb3ccf94-6a04-4c46-ad5f-468bbc79dbe3",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Lead",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "4fed0fdc-6ce2-4351-89e0-8c71da038512",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Manager",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        -16
+      ],
+      "id": "c9d3adb6-e7a6-4ed8-b59d-ff0448315746",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "={{$env.SERPER_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=(\"Engineering Manager\" OR \"Software Engineering Manager\" OR \"Tech Lead\" OR \"Principal Engineer\" OR \"CTO\" OR \"Founder\") (\"at {{ $json.companyName }}\" OR intitle:\"{{ $json.companyName }}\") site:linkedin.com/in"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1824,
+        224
+      ],
+      "id": "6ec1bc80-7f2e-4dd5-8fd7-40aa57de486f",
+      "name": "Search Google1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "organic",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        224
+      ],
+      "id": "d13145b6-540a-4753-885a-2d45580289d6",
+      "name": "Split Out",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "phi3:latest",
+          "mode": "list",
+          "cachedResultName": "phi3:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an expert technical career coach. Your goal is to write a highly specific, professional cover letter.\n\nRULES:\n1. Do NOT use placeholders like \"[Insert Date]\" or \"[Hiring Manager Name]\". Use \"Dear Hiring Manager,\".\n2. Do NOT add a header block (addresses/dates) at the top. Start directly with the salutation.\n3. Keep it under 200 words. Be concise and confident.\n4. Do NOT output Markdown, JSON, or conversational filler (\"Here is your letter\"). Output ONLY the letter text.\n5. Focus heavily on the candidate's projects (Property Insights, MLOps) that match the job description keywords."
+            },
+            {
+              "content": "=### JOB DETAILS\nRole: {{ $json.title }}\nCompany: {{ $json.companyName }}\nLocation: {{ $json.location }}\nDescription:\n{{ $json.descriptionText }}\n\n### CANDIDATE PROFILE\nName: S Haswanth\nEducation: B.Tech CSE, VIT Vellore (CGPA 8.23)\nSkills: Java, Spring Boot, React, AWS, Docker, Kubernetes, Terraform.\nExperience: Eco Forge Hackathon (System Design), VIT LEO Club (Marketing/Outreach).\nProjects:\n1. Property Insights Platform (Java, Spring Boot, React)\n2. Distributed MLOps Framework (Kubernetes, Docker)\n3. Quantum-Safe Privacy (Python, BERT)\nCertifications: AWS Solutions Architect, IBM GenAI.\n\n### TASK\nWrite a tailored cover letter for this role."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -368
+      ],
+      "id": "89b71abc-a653-46e8-a0e7-aeda545167c8",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e0b9fd0b-eba7-4e7d-a0fe-965567db89c1",
+              "leftValue": "={{ $json.final_score }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1360,
+        -16
+      ],
+      "id": "9dec0a55-fddc-4cc9-ac42-d609fb471e45",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "getDataset-items",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company name": "={{ $('Filter').item.json.companyName }}",
+            "Location": "={{ $('Filter').item.json.location }}",
+            "Job URL": "={{ $('Filter').item.json.link }}",
+            "Final Score": "={{ $json.final_score }}",
+            "Reasoning": "={{ $json.reasoning }}"
+          },
+          "matchingColumns": [
+            "Job URL"
+          ],
+          "schema": [
+            {
+              "id": "Company name",
+              "displayName": "Company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job URL",
+              "displayName": "Job URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Final Score",
+              "displayName": "Final Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        224
+      ],
+      "id": "3a8f83b9-90ff-4137-b4ce-d12a88a25023",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## I'm a note \nFilter in such a way, high experience, low followers\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1920,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "a3c1c67b-a902-4a89-b7b1-bfa741db4c91",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1040,
+        -160
+      ],
+      "id": "fe00490b-bd15-4f9e-961d-d644f38cc016",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Safety check if no results were found\nif (!items || items.length === 0) {\n  return [{\n    json: {\n      all_names: \"No results found\",\n      all_urls: \"No results found\"\n    }\n  }];\n}\n\nlet namesList = [];\nlet urlsList = [];\n\n// Helper function to clean up the Google Title into just a Name\nfunction extractName(rawTitle) {\n    if (!rawTitle) return \"Unknown\";\n    return rawTitle.split(/[-|,]/)[0].replace(/profiles/i, \"\").trim(); \n}\n\n// Loop through everyone and add them to our lists\nfor (const item of items) {\n    const name = extractName(item.json.title);\n    const url = item.json.link || \"No URL\";\n    \n    namesList.push(name);\n    urlsList.push(url);\n}\n\n// Output a single package. \n// We use \\n to create a new line between each person so it stacks neatly in your spreadsheet cell!\nreturn [{\n  json: {\n    all_names: namesList.join('\\n'),\n    all_urls: urlsList.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        224
+      ],
+      "id": "0902ca11-4139-4316-9e66-1c72d79646fb",
+      "name": "group-names-url"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "n8n-Js-linkedIn-p",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "emp names": "={{ $('Merge-company-Li').item.json.all_names }}",
+            "LI urls": "={{ $('Merge-company-Li').item.json.all_urls }}",
+            "Tracking ID": "={{ $('Merge-company-Li').item.json.trackingId }}",
+            "job link": "={{ $('Merge-company-Li').item.json.link }}",
+            "job title": "={{ $('Merge-company-Li').item.json.title }}",
+            "job description": "={{ $('Merge-company-Li').item.json.descriptionText }}",
+            "company": "={{ $('Merge-company-Li').item.json.companyName }}",
+            "date": "={{ $('Merge-company-Li').item.json.postedAt }}",
+            "location": "={{ $('Merge-company-Li').item.json.location }}",
+            "total score": "={{ $('Merge-company-Li').item.json.final_score }}",
+            "resume score": "={{ $('Merge-company-Li').item.json.resume_score }}",
+            "company type score": "={{ $('Merge-company-Li').item.json.company_score }}",
+            "employment type score": "={{ $('Merge-company-Li').item.json.type_score }}",
+            "reasoning": "={{ $('Merge-company-Li').item.json.reasoning }}",
+            "linkedIn message": "={{ $('LinkedIn-Message-Gen').item.json.content }}",
+            "cover letter": "={{ $json.content }}"
+          },
+          "matchingColumns": [
+            "Tracking ID"
+          ],
+          "schema": [
+            {
+              "id": "Tracking ID",
+              "displayName": "Tracking ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job title",
+              "displayName": "job title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job description",
+              "displayName": "job description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job link",
+              "displayName": "job link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total score",
+              "displayName": "total score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resume score",
+              "displayName": "resume score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company type score",
+              "displayName": "company type score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employment type score",
+              "displayName": "employment type score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reasoning",
+              "displayName": "reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emp names",
+              "displayName": "emp names",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LI urls",
+              "displayName": "LI urls",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cover letter",
+              "displayName": "cover letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedIn message",
+              "displayName": "linkedIn message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3520,
+        208
+      ],
+      "id": "7c2f2ece-77bf-400b-b650-80fe4ae94874",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2560,
+        208
+      ],
+      "id": "c2503a31-66fd-4501-b06d-77ab629029ba",
+      "name": "Merge-company-Li"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1744,
+        -16
+      ],
+      "id": "6431c0e7-f60a-4a5a-8222-4b88a5318f9a",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        -112
+      ],
+      "id": "86b507d7-31a6-43be-a5a4-212b8a29be50",
+      "name": "finishLoop"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "phi3:latest",
+          "mode": "list",
+          "cachedResultName": "phi3:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Task: Complete the 3-sentence LinkedIn cold message template below for the \"{{ $json.title }}\" role at \"{{ $json.companyName }}\".\n\nContext:\nJob Description: \"{{ $json.descriptionText }}\"\n\nMy Background: \nI build scalable systems using Java (Spring Boot), React, PostgreSQL, Docker, and Kubernetes.\n\nRules:\n1. Output EXACTLY 3 lines of text. \n2. Sentence 1 MUST be exactly this: \"Hi [Name], I'm an AWS Certified CS student (VIT '26) and I saw your opening for a {{ $json.title }}.\"\n3. Sentence 2: Write ONE sentence connecting a requirement from the Job Description to my experience with Java, React, or Docker/Kubernetes. Keep it under 15 words.\n4. Sentence 3 MUST be exactly this: \"Would you be open to reviewing my background or passing my resume to the hiring manager?\"\n5. Output ONLY the final 3-sentence message. Stop generating immediately after the third sentence."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        208
+      ],
+      "id": "c488f0a6-7181-4b6b-8de0-32ff07766120",
+      "name": "LinkedIn-Message-Gen",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "phi3:latest",
+          "mode": "list",
+          "cachedResultName": "phi3:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Task: Write a strictly formatted, 3-paragraph cold email to an Engineering Manager for the \"{{ $('Merge-company-Li').item.json.title }}\" role at \"{{ $('Merge-company-Li').item.json.companyName }}\".\n\nContext:\nJob Description: \"{{ $('Merge-company-Li').item.json.descriptionText }}\"\n\nMy Background:\nCS student at VIT (Class of '26), AWS Solutions Architect & IBM GenAI certified. Built a Java/Spring Boot Property Platform (<500ms latency), a distributed MLOps framework (Docker/Kubernetes), and a React AdTech Calculator.\n\nRules:\n1. Output EXACTLY 3 paragraphs using actual line breaks (press Enter between paragraphs). Do NOT output literal \"\\n\" characters. Do NOT format as JSON.\n2. Paragraph 1: Start with \"Hi [Name],\" followed by a maximum of 2 sentences mapping ONE requirement from the Job Description to my Java, React, or Docker/Kubernetes experience. \n3. Paragraph 2: MUST include this exact sentence: \"I am highly interested in this specific opportunity: [Job Link].\" Add one more short sentence mentioning my attached resume and my focus on building scalable systems.\n4. Paragraph 3: MUST consist of exactly these two sentences, word-for-word: \"Would you be open to referring me for the {{ $('Merge-company-Li').item.json.title }} position? Would you be willing to look at my attached resume to see if I am a strong fit?\"\n5. Output ONLY the raw email text. Stop generating immediately after Paragraph 3. Do not include a subject line, signature block, or conversational filler."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        208
+      ],
+      "id": "dee35307-5c30-4a2d-98c2-e10a6f7d0ee0",
+      "name": "ColdMail-Gen",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "pinData": {
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset items": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor1": {
+      "main": [
+        [
+          {
+            "node": "Get dataset items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Message a model3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "group-names-url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        []
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "group-names-url": {
+      "main": [
+        [
+          {
+            "node": "Merge-company-Li",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge-company-Li": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn-Message-Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "finishLoop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge-company-Li",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Search Google1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn-Message-Gen": {
+      "main": [
+        [
+          {
+            "node": "ColdMail-Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ColdMail-Gen": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "83c7c352-5b1f-4e5c-8672-2eb860b57bd5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "id": "kNpYqV4TsGfD6tigpLgSs",
+  "tags": []
+}
